@@ -7,6 +7,9 @@
 
 # importing libraries
 library(readxl)
+library(factoextra)
+library(ggfortify)
+library(cluster)
 
 # read excel file
 data <- read_excel("G:/Other computers/My Computer/IIT/Level_02/2.ML/1. ML CW/vehicles.xlsx", sheet = 1) # opening the excel file with sheet no
@@ -56,14 +59,66 @@ NBcluster<-NbClust(dataScaled,
                    max.nc = 10,
                    distance = "euclidean",
                    method = "kmeans")
-fviz_nbclust(NBcluster)
+#fviz_nbclust(NBcluster)
+barplot(table(NBcluster$Best.n[1,]), # provide bar charts####
+        xlab="Numer of Clusters",
+        ylab="Number of Criteria",
+        main="Number of Clusters Chosen")
+
 
 ## Elbow method
+fviz_nbclust(dataScaled,kmeans,method = "wss", k.max = 10)
 
 ## Gap statistics
+fviz_nbclust(dataScaled,kmeans,method = "gap_stat")
 
 ## Silhouette method
+fviz_nbclust(dataScaled,kmeans,method = "silhouette")
+
+#-------------- K-means clustering investigation -----------------
+# calculate internal evaluation metrics
+calculateWssBss <- function(kmeans){
+  # Calculate WSS
+  wss <- sum(kmeans$withinss)
+  
+  # Calculate BSS
+  centers <- kmeans$centers
+  dist_centers <- dist(centers)^2
+  bss <- sum(kmeans$size * dist_centers)
+  
+  # Calculate TSS
+  tss <- sum(dist(data)^2)
+  
+  # BSS/TSS ratio
+  bssOverTss <- bss / tss
+  
+  # Print WSS, BSS, and TSS to console
+  #cat("No.of clusters:", centers, "\n")
+  cat("WSS:", wss, "\n")
+  cat("BSS:", bss, "\n")
+  cat("TSS:", tss, "\n")
+  cat("BSS / TSS ratio:", bssOverTss, "\n")
+}
+
+# for 2 clusters
+k2 <-kmeans(dataScaled, 2)
+autoplot(k2,dataScaled,frame=TRUE)
+calculateWssBss(k2)
+
+# for 3 clusters
+k3 <-kmeans(dataScaled, 3)
+autoplot(k3,dataScaled,frame=TRUE)
+calculateWssBss(k3)
 
 #--------------silhouette plot------------------
+# Silhouette plot for k2
+sil_k2 <- silhouette(k2$cluster, dist(dataScaled))
+windows()
+plot(sil_k2)
+
+# Silhouette plot for k3
+sil_k3 <- silhouette(k3$cluster, dist(dataScaled))
+windows()
+plot(sil_k3)
 
 #--------------PCA---------------
