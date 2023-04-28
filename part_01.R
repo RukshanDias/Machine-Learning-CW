@@ -90,22 +90,20 @@ calculateWssBss <- function(kmeans){
   wss <- sum(kmeans$withinss)
   
   # Calculate BSS
-  centers <- kmeans$centers
-  dist_centers <- dist(centers)^2
-  bss <- sum(kmeans$size * dist_centers)
+  bss <- kmeans$betweenss
   
   # Calculate TSS
-  tss <- sum(dist(data)^2)
+  tss <- kmeans$totss
   
   # BSS/TSS ratio
   bssOverTss <- bss / tss
   
   # Print WSS, BSS, and TSS to console
-  #cat("No.of clusters:", centers, "\n")
+  cat("No.of clusters:", length(unique(kmeans$cluster)), "\n")
   cat("WSS:", wss, "\n")
   cat("BSS:", bss, "\n")
   cat("TSS:", tss, "\n")
-  cat("BSS / TSS ratio:", bssOverTss, "\n")
+  cat("BSS TSS ratio:", bssOverTss, "\n")
 }
 
 # for 2 clusters
@@ -123,8 +121,7 @@ calculateWssBss(k3)
 #Silhouette plot function
 viewSilhouettePlot <- function(kmeans, data){
   sil <- silhouette(kmeans$cluster, dist(data))
-  windows()
-  plot(sil)
+  fviz_silhouette(sil)
 }
 
 # Silhouette plot for k2
@@ -135,95 +132,85 @@ viewSilhouettePlot(k3, dataScaled)
 
 
 #--------------PCA---------------
-# pca <- prcomp(dataScaled, center = TRUE)
-# summary(pca)
-# 
-# # View the eigenvalues and eigenvectors
-# # pca$rotation
-# # pca$sdev^2
-# 
-# # View the cumulative score per principal components (PC)
-# cumsum(pca$sdev^2 / sum(pca$sdev^2))
-# 
-# # Extract the principal components with a cumulative score > 92%
-# cum_score <- cumsum(pca$sdev^2 / sum(pca$sdev^2))
-# plot(cum_score, type = "b")
-# 
-# #pc_scores <- as.data.frame(pca$x[, cum_score > 0.92]) # transform & filtering
-# pc_scores <- which(cum_score > 0.92)
-# data_transformed <- predict(pca, newdata = dataScaled)[, pc_scores]
-# data_pca_transformed <- as.data.frame(data_transformed)
-# 
+pca <- prcomp(dataScaled, center = TRUE)
+summary(pca)
+
+# View the eigenvalues and eigenvectors
+pca$rotation
+pca$sdev^2
+
+# View the cumulative score per principal components (PC)
+cumsum(pca$sdev^2 / sum(pca$sdev^2))
+
+# Extract the principal components with a cumulative score > 92%
+cum_score <- cumsum(pca$sdev^2 / sum(pca$sdev^2))
+plot(cum_score, type = "b", main = "PCA cumulative score")
+
+#pc_scores <- as.data.frame(pca$x[, cum_score > 0.92]) # transform & filtering
+pc_scores <- which(cum_score > 0.92)
+data_transformed <- predict(pca, newdata = dataScaled)[, pc_scores]
+dataTransformed <- as.data.frame(data_transformed)
+
 # View(pc_scores)
 # View(data_transformed)
-# boxplot(pc_scores, main="after PCA")
-# boxplot(data_transformed, main="after PCA2")
-# 
-# pc_scores <- data_pca_transformed
 
-#---------new PCA test-----
-# Perform PCA analysis
-pca <- prcomp(dataScaled)
-View(pca)
-# Print eigenvalues and eigenvectors
-print(summary(pca))
+boxplot(dataTransformed, main="after PCA2")
 
-# Calculate cumulative score per principal components (PC)
-pca_var <- pca$sdev^2
-pca_var
-pca_var_prop <- pca_var / sum(pca_var)
-pca_var_prop
-pca_var_cumprop <- cumsum(pca_var_prop)
-pca_var_cumprop
 
-# Plot cumulative score per PC
-plot(pca_var_cumprop, xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained",
-     ylim = c(0, 1), type = "b")
-
-View(dataScaled)
-# Create a new transformed dataset with principal components as attributes
-pca_trans <- predict(pca, newdata = dataScaled)
-
-# Choose PCs that provide at least cumulative score > 92%
-selected_pcs <- which(pca_var_cumprop > 0.92)
-transformed_data <- pca_trans[, selected_pcs]
-boxplot(transformed_data)
-View(transformed_data)
-
-pc_scores <- transformed_data
 #------------optimal clusters after PCA------------
 ## NBclust value
-viewNbCluster(pc_scores)
+viewNbCluster(dataTransformed)
 
 ## Elbow method
-fviz_nbclust(pc_scores,kmeans,method = "wss", k.max = 10)
+fviz_nbclust(dataTransformed,kmeans,method = "wss", k.max = 10)
 
 ## Gap statistics
-fviz_nbclust(pc_scores,kmeans,method = "gap_stat")
+fviz_nbclust(dataTransformed,kmeans,method = "gap_stat")
 
 ## Silhouette method
-fviz_nbclust(pc_scores,kmeans,method = "silhouette")
+fviz_nbclust(dataTransformed,kmeans,method = "silhouette")
 
 #-----------Kmeans clustering after PCA--------
+set.seed(1234)
 # for 2 clusters
-k2 <-kmeans(pc_scores, 2)
-autoplot(k2,pc_scores,frame=TRUE)
-calculateWssBss(k2)
+pca_k2 <-kmeans(dataTransformed, 2)
+autoplot(pca_k2,dataTransformed,frame=TRUE)
+calculateWssBss(pca_k2)
 
 # for 3 clusters
-k3 <-kmeans(pc_scores, 3)
-autoplot(k3,pc_scores,frame=TRUE)
-calculateWssBss(k3)
+pca_k3 <-kmeans(dataTransformed, 3)
+autoplot(pca_k3,dataTransformed,frame=TRUE)
+calculateWssBss(pca_k3)
 
 # for 4 clusters
-k4 <-kmeans(pc_scores, 4)
-autoplot(k4,pc_scores,frame=TRUE)
-calculateWssBss(k4)
+pca_k4 <-kmeans(dataTransformed, 4)
+autoplot(pca_k4,dataTransformed,frame=TRUE)
+calculateWssBss(pca_k4)
 
 #--------------silhouette plot after PCA------------------
 
 # Silhouette plot for k2
-viewSilhouettePlot(k2, pc_scores)
+viewSilhouettePlot(pca_k2, dataTransformed)
 
 # Silhouette plot for k3
-viewSilhouettePlot(k3, pc_scores)
+viewSilhouettePlot(pca_k3, dataTransformed)
+
+# Silhouette plot for k3
+viewSilhouettePlot(pca_k4, dataTransformed)
+
+#-----------Calinski Harabasz Index----------
+calculate_Calinski_Harabasz_Index <- function(kmeans, data){
+  clusterCount <- length(unique(kmeans$cluster))
+  rowCount <- nrow(data)
+  BGSS <- kmeans$betweenss
+  WGSS <- kmeans$tot.withinss
+  
+  CH_index <- (BGSS/WGSS) * ((rowCount-clusterCount)/ (clusterCount-1))
+  cat("CH_index for",clusterCount, "clusters -> ", CH_index, "\n")
+  return(CH_index)
+}
+ch_index_k2 <- calculate_Calinski_Harabasz_Index(k2, dataScaled)
+ch_index_k3 <- calculate_Calinski_Harabasz_Index(k3, dataScaled)
+ch_index_pca_k2 <- calculate_Calinski_Harabasz_Index(pca_k2, dataTransformed)
+ch_index_pca_k3 <- calculate_Calinski_Harabasz_Index(pca_k3, dataTransformed)
+
