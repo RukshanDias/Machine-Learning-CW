@@ -148,11 +148,17 @@ plot(cum_score, type = "b", main = "PCA cumulative score")
 
 #pc_scores <- as.data.frame(pca$x[, cum_score > 0.92]) # transform & filtering
 pc_scores <- which(cum_score > 0.92)
-data_transformed <- predict(pca, newdata = dataScaled)[, pc_scores]
+
+
+########new####
+allPCs <- c(1:pc_scores[1])
+data_transformed <- predict(pca, newdata = dataScaled)[, allPCs:pc_scores[1]]
+
+#data_transformed <- predict(pca, newdata = dataScaled)[, pc_scores]
 dataTransformed <- as.data.frame(data_transformed)
 
 # View(pc_scores)
-# View(data_transformed)
+View(dataTransformed)
 
 boxplot(dataTransformed, main="after PCA2")
 
