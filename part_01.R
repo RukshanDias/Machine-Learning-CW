@@ -139,11 +139,11 @@ summary(pca)
 pca$rotation
 pca$sdev^2
 
-# View the cumulative score per principal components (PC)
-cumsum(pca$sdev^2 / sum(pca$sdev^2))
-
 # Extract the principal components with a cumulative score > 92%
 cum_score <- cumsum(pca$sdev^2 / sum(pca$sdev^2))
+
+# View the cumulative score per principal components (PC)
+cum_score
 plot(cum_score, type = "b", main = "PCA cumulative score")
 
 #pc_scores <- as.data.frame(pca$x[, cum_score > 0.92]) # transform & filtering
