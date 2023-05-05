@@ -2,9 +2,6 @@
 # Rukshan Dias - w1912792
 # -----------------------
 
-# install libraries
-# install.packages("readxl")
-
 # importing libraries
 library(readxl)
 library(factoextra)
@@ -18,16 +15,10 @@ colnames(data) # getting columns names
 df <- subset(data, select = -c(Samples, Class)) # new data var without sample and class columns
 dataColumns <- colnames(df) # getting new columns names
 
-data
 View(data)
 str(data)
 summary(data)
 
-#--- missing values check----
-sum(is.na(df))
-summary(is.na(df))
-
-dim(data)
 boxplot(df, main = "initial dataset")
 
 #-------outlier detection------------
@@ -146,15 +137,8 @@ cum_score <- cumsum(pca$sdev^2 / sum(pca$sdev^2))
 cum_score
 plot(cum_score, type = "b", main = "PCA cumulative score")
 
-#pc_scores <- as.data.frame(pca$x[, cum_score > 0.92]) # transform & filtering
 pc_scores <- which(cum_score > 0.92)
-
-
-########new####
-allPCs <- c(1:pc_scores[1])
-data_transformed <- predict(pca, newdata = dataScaled)[, allPCs:pc_scores[1]]
-
-#data_transformed <- predict(pca, newdata = dataScaled)[, pc_scores]
+data_transformed <- predict(pca, newdata = dataScaled)[, pc_scores]
 dataTransformed <- as.data.frame(data_transformed)
 
 # View(pc_scores)
@@ -188,11 +172,6 @@ pca_k3 <-kmeans(dataTransformed, 3)
 autoplot(pca_k3,dataTransformed,frame=TRUE)
 calculateWssBss(pca_k3)
 
-# for 4 clusters
-pca_k4 <-kmeans(dataTransformed, 4)
-autoplot(pca_k4,dataTransformed,frame=TRUE)
-calculateWssBss(pca_k4)
-
 #--------------silhouette plot after PCA------------------
 
 # Silhouette plot for k2
@@ -200,9 +179,6 @@ viewSilhouettePlot(pca_k2, dataTransformed)
 
 # Silhouette plot for k3
 viewSilhouettePlot(pca_k3, dataTransformed)
-
-# Silhouette plot for k3
-viewSilhouettePlot(pca_k4, dataTransformed)
 
 #-----------Calinski Harabasz Index----------
 calculate_Calinski_Harabasz_Index <- function(kmeans, data){
